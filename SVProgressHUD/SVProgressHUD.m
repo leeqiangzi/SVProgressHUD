@@ -655,12 +655,12 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 - (void)layoutSubviews {
     [super layoutSubviews];
     // todo lizhiqiang: debug log, remove before release
-    NSLog(@"[SVHUD-DUO] layoutSubviews bounds=%@ last=%@ window=%p hudView.frame=%@", NSStringFromCGSize(self.bounds.size), NSStringFromCGSize(self.lastLayoutSize), self.window, NSStringFromCGRect(self.hudView.frame));
-    if (!CGSizeEqualToSize(self.bounds.size, self.lastLayoutSize)) {
-        self.lastLayoutSize = self.bounds.size;
-        if (self.superview) {
-            [self positionHUD:nil];
-        }
+    NSLog(@"[SVHUD-DUO] layoutSubviews bounds=%@ window=%p hudView.frame=%@", NSStringFromCGSize(self.bounds.size), self.window, NSStringFromCGRect(self.hudView.frame));
+    // Re-position on every layout pass, like a center constraint would do. A size
+    // guard is not enough: a 180-degree flip keeps the size unchanged while the
+    // system still relayouts, and the HUD could be left off screen.
+    if (self.superview) {
+        [self positionHUD:nil];
     }
 }
 

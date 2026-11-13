@@ -702,8 +702,15 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
     } else {
         keyboardHeight = self.visibleKeyboardHeight;
     }
+
+    // Sanity clamp: a keyboard can never cover (almost) the whole window. On foldable
+    // devices rotation emits keyboard notifications with bogus full-window frames,
+    // which would make activeHeight negative and push the HUD off screen.
+    if (keyboardHeight > CGRectGetHeight(window.bounds) * 0.7f) {
+        keyboardHeight = 0.0f;
+    }
 #endif
-    
+
     // Get the currently active frame of the display (depends on orientation)
     CGRect orientationFrame = window.safeAreaLayoutGuide.layoutFrame;
     // todo lizhiqiang: debug log, remove before release

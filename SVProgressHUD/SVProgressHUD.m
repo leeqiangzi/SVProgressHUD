@@ -382,8 +382,11 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 - (instancetype)initWithFrame:(CGRect)frame {
     if((self = [super initWithFrame:frame])) {
         _isInitializing = YES;
-        
+
         self.userInteractionEnabled = NO;
+        // Follow the overlay (controlView) when the window resizes (fold/unfold, split view):
+        // controlView and hudView already have flexible masks, this view was the missing link.
+        self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         self.activityCount = 0;
         
         self.backgroundView.alpha = 0.0f;
@@ -1225,13 +1228,14 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
         [_controlView addTarget:self action:@selector(controlViewDidReceiveTouchEvent:forEvent:) forControlEvents:UIControlEventTouchDown];
     }
     
-    // Update frame
+    // Update frame. Prefer the window it is already mounted in: on foldable devices
+    // the global window lookup may lag behind the current posture.
 #if !defined(SV_APP_EXTENSIONS)
-    _controlView.frame = [SVProgressHUD mainWindow].bounds;
+    _controlView.frame = _controlView.superview ? _controlView.superview.bounds : [SVProgressHUD mainWindow].bounds;
 #else
     _controlView.frame = [UIScreen mainScreen].bounds;
 #endif
-    
+
     return _controlView;
 }
 
@@ -1383,17 +1387,19 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 #if !defined(SV_APP_EXTENSIONS)
     NSEnumerator *frontToBackWindows = [UIApplication.sharedApplication.windows reverseObjectEnumerator];
     for (UIWindow *window in frontToBackWindows) {
-        BOOL windowOnMainScreen = window.screen == UIScreen.mainScreen;
+        // On foldable devices (e.g. iPhone Duo) the app window may live on a non-main
+        // screen while unfolded, so we must not require window.screen == UIScreen.mainScreen.
         BOOL windowIsVisible = !window.hidden && window.alpha > 0;
         BOOL windowLevelSupported = (window.windowLevel >= UIWindowLevelNormal && window.windowLevel <= self.maxSupportedWindowLevel);
         BOOL windowKeyWindow = window.isKeyWindow;
-			
-        if(windowOnMainScreen && windowIsVisible && windowLevelSupported && windowKeyWindow) {
+
+        if(windowIsVisible && windowLevelSupported && windowKeyWindow) {
             return window;
         }
     }
 #endif
-    return nil;
+    // Fallback: scene-based lookup, which is screen-agnostic.
+    return SVProgressHUD.mainWindow;
 }
     
 - (void)fadeInEffects {

@@ -35,6 +35,9 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 
 @property (nonatomic, strong) NSTimer *graceTimer;
 @property (nonatomic, strong) NSTimer *fadeOutTimer;
+// Last size handled by layoutSubviews, used to re-position the HUD only when the
+// hosting window actually changed size (fold/unfold/rotation on foldable devices).
+@property (nonatomic, assign) CGSize lastLayoutSize;
 
 @property (nonatomic, strong) UIControl *controlView;
 @property (nonatomic, strong) UIView *backgroundView;
@@ -644,6 +647,19 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 
 - (NSDictionary*)notificationUserInfo {
     return (self.statusLabel.text ? @{SVProgressHUDStatusUserInfoKey : self.statusLabel.text} : nil);
+}
+
+// Re-run positioning whenever our size actually changes. Autoresizing alone cannot
+// survive the transient letterboxed frames foldable devices animate through on
+// rotation / fold, which can fling the hudView off screen and never bring it back.
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    if (!CGSizeEqualToSize(self.bounds.size, self.lastLayoutSize)) {
+        self.lastLayoutSize = self.bounds.size;
+        if (self.superview) {
+            [self positionHUD:nil];
+        }
+    }
 }
 
 - (void)positionHUD:(NSNotification*)notification {

@@ -654,6 +654,8 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
 // rotation / fold, which can fling the hudView off screen and never bring it back.
 - (void)layoutSubviews {
     [super layoutSubviews];
+    // todo lizhiqiang: debug log, remove before release
+    NSLog(@"[SVHUD-DUO] layoutSubviews bounds=%@ last=%@ window=%p hudView.frame=%@", NSStringFromCGSize(self.bounds.size), NSStringFromCGSize(self.lastLayoutSize), self.window, NSStringFromCGRect(self.hudView.frame));
     if (!CGSizeEqualToSize(self.bounds.size, self.lastLayoutSize)) {
         self.lastLayoutSize = self.bounds.size;
         if (self.superview) {
@@ -704,6 +706,8 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
     
     // Get the currently active frame of the display (depends on orientation)
     CGRect orientationFrame = window.safeAreaLayoutGuide.layoutFrame;
+    // todo lizhiqiang: debug log, remove before release
+    NSLog(@"[SVHUD-DUO] positionHUD window=%p windowBounds=%@ orientationFrame=%@ keyboardHeight=%.1f selfWindow=%p", window, NSStringFromCGRect(window.bounds), NSStringFromCGRect(orientationFrame), keyboardHeight, self.window);
     
 #if !defined(SV_APP_EXTENSIONS) && TARGET_OS_IOS
     CGRect statusBarFrame = window.windowScene.statusBarManager.statusBarFrame;
@@ -754,6 +758,8 @@ static const CGFloat SVProgressHUDLabelSpacing = 8.0f;
     } else {
         self.hudView.center = CGPointMake(newCenter.x + self.offsetFromCenter.horizontal, newCenter.y + self.offsetFromCenter.vertical);
     }
+    // todo lizhiqiang: debug log, remove before release
+    NSLog(@"[SVHUD-DUO] moveToPoint:(%.1f, %.1f) hudView.frame=%@ self.frame=%@", newCenter.x, newCenter.y, NSStringFromCGRect(self.hudView.frame), NSStringFromCGRect(self.frame));
 }
 
 
